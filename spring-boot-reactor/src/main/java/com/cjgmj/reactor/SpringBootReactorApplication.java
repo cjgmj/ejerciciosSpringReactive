@@ -21,8 +21,14 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		final Flux<Usuario> nombres = Flux
-				.just("Joe Simons", "John Doe", "Linus Torvalds", "Jane Doe", "Rasmus Lerdorf", "Erich Gamma")
+		final Flux<String> nombres = Flux.just("Joe Simons", "John Doe", "Linus Torvalds", "Jane Doe", "Rasmus Lerdorf",
+				"Erich Gamma");
+
+		// Al ser inmutables los observables los operadores siguientes no afectarán al
+		// observable original, ya que esto crea un nuevo observable, si queremos ver la
+		// ejecución de esta sección deberemos asignarla a un nuevo observable y
+		// suscribirnos al mismo
+		final Flux<Usuario> usuarios = nombres
 				.map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
 				.filter(usuario -> "Doe".equalsIgnoreCase(usuario.getApellido())).doOnNext(usuario -> {
 					if (usuario == null) {
@@ -36,7 +42,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 					return usuario;
 				});
 
-		nombres.subscribe(usuario -> LOG.info(usuario.toString()), error -> LOG.error(error.getMessage()),
+		usuarios.subscribe(usuario -> LOG.info(usuario.toString()), error -> LOG.error(error.getMessage()),
 				() -> LOG.info("Ha finalizado la ejecución del observable con éxito"));
 	}
 
