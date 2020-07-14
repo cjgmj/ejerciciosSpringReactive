@@ -6,6 +6,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.cjgmj.reactor.models.Usuario;
+
 import reactor.core.publisher.Flux;
 
 @SpringBootApplication
@@ -19,15 +21,20 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		final Flux<String> nombres = Flux.just("Joe", "John", "Linus", "Jane").doOnNext(nombre -> {
-			if (nombre.isEmpty()) {
-				throw new RuntimeException("El nombre no puede estar vacío");
-			}
+		final Flux<Usuario> nombres = Flux.just("Joe", "John", "Linus", "Jane")
+				.map(nombre -> new Usuario(nombre.toUpperCase(), null)).doOnNext(usuario -> {
+					if (usuario == null) {
+						throw new RuntimeException("El nombre no puede estar vacío");
+					}
 
-			System.out.println(nombre);
-		});
+					System.out.println(usuario.getNombre());
+				}).map(usuario -> {
+					final String nombre = usuario.getNombre().toLowerCase();
+					usuario.setNombre(nombre);
+					return usuario;
+				});
 
-		nombres.subscribe(nombre -> LOG.info(nombre), error -> LOG.error(error.getMessage()),
+		nombres.subscribe(usuario -> LOG.info(usuario.toString()), error -> LOG.error(error.getMessage()),
 				() -> LOG.info("Ha finalizado la ejecución del observable con éxito"));
 	}
 
