@@ -1,5 +1,6 @@
 package com.cjgmj.reactor;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,29 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		this.ejemploZipWithRangos();
+		this.ejemploDelayElements();
+	}
+
+	public void ejemploDelayElements() throws InterruptedException {
+		final Flux<Integer> rango = Flux.range(1, 12).delayElements(Duration.ofSeconds(1))
+				.doOnNext(i -> LOG.info(i.toString()));
+
+//		rango.blockLast();
+		rango.subscribe();
+
+		Thread.sleep(13000);
+
+	}
+
+	public void ejemploInterval() {
+		final Flux<Integer> rango = Flux.range(1, 12);
+		final Flux<Long> delay = Flux.interval(Duration.ofSeconds(1));
+
+		rango.zipWith(delay, (ra, de) -> ra).doOnNext(i -> LOG.info(i.toString()))
+				// Se suscribe al flujo bloqueando la ejecución hasta que se completa el
+				// observable
+				.blockLast();
+
 	}
 
 	public void ejemploZipWithRangos() {
