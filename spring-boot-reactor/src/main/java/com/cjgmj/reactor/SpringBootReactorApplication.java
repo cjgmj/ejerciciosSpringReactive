@@ -3,6 +3,7 @@ package com.cjgmj.reactor;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,23 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		this.ejemploDelayElements();
+		this.ejemploIntervalInfinito();
+	}
+
+	public void ejemploIntervalInfinito() throws InterruptedException {
+		final CountDownLatch latch = new CountDownLatch(1);
+
+		Flux.interval(Duration.ofSeconds(1)).doOnTerminate(latch::countDown).flatMap(i -> {
+			if (i >= 5) {
+				return Flux.error(new InterruptedException("Llegó a 5"));
+			}
+			return Flux.just(i);
+		}).map(i -> "Hola " + i)
+				// Si lanza error intenta ejecutar de nuevo el número de veces indicado, en caso
+				// de que las siguientes den error
+				.retry(2).subscribe(s -> LOG.info(s), e -> LOG.error(e.getMessage()));
+
+		latch.await();
 	}
 
 	public void ejemploDelayElements() throws InterruptedException {
