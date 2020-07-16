@@ -11,9 +11,18 @@ public class Producto {
 	@Id
 	private String id;
 
-	private String nombreProducto;
+	private String nombre;
 	private Double precio;
 	private Date createAt;
+
+	public Producto() {
+	}
+
+	public Producto(String nombre, Double precio) {
+		super();
+		this.nombre = nombre;
+		this.precio = precio;
+	}
 
 	public String getId() {
 		return this.id;
@@ -23,12 +32,12 @@ public class Producto {
 		this.id = id;
 	}
 
-	public String getNombreProducto() {
-		return this.nombreProducto;
+	public String getNombre() {
+		return this.nombre;
 	}
 
-	public void setNombreProducto(String nombreProducto) {
-		this.nombreProducto = nombreProducto;
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
 	}
 
 	public Double getPrecio() {
