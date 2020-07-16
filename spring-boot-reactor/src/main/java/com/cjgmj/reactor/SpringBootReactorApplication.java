@@ -31,7 +31,47 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		this.ejemploIntervalDesdeCreate();
+		this.ejemploContrapresion();
+	}
+
+	public void ejemploContrapresion() {
+		Flux.range(1, 10).log().limitRate(2).subscribe(
+//			new Subscriber<Integer>() {
+//	
+//				private Subscription s;
+//	
+//				private Integer limite = 2;
+//	
+//				private Integer consumido = 0;
+//	
+//				@Override
+//				public void onSubscribe(Subscription s) {
+//					this.s = s;
+//					s.request(this.limite);
+//				}
+//	
+//				@Override
+//				public void onNext(Integer t) {
+//					LOG.info(t.toString());
+//					this.consumido++;
+//	
+//					if (this.consumido == this.limite) {
+//						this.consumido = 0;
+//						this.s.request(this.limite);
+//					}
+//				}
+//	
+//				@Override
+//				public void onError(Throwable t) {
+//	
+//				}
+//	
+//				@Override
+//				public void onComplete() {
+//	
+//				}
+//			}
+		);
 	}
 
 	public void ejemploIntervalDesdeCreate() {
