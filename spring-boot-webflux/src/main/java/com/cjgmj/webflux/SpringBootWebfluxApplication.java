@@ -1,5 +1,7 @@
 package com.cjgmj.webflux;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +39,10 @@ public class SpringBootWebfluxApplication implements CommandLineRunner {
 				new Producto("Hewlett Packard Multifuncional F2280", 200.89),
 				new Producto("Bianchi Bicicleta Aro 26", 70.89), new Producto("HP Notebook Omen 17", 2500.89),
 				new Producto("Mica Cómoda 5 Cajones", 150.89), new Producto("TV Sony Bravia OLED 4K Ultra HD", 2255.89))
-				.flatMap(producto -> this.productoDao.save(producto))
-				.subscribe(producto -> LOG.info("Insert: " + producto.getId() + " " + producto.getNombre()));
+				.flatMap(producto -> {
+					producto.setCreateAt(new Date());
+					return this.productoDao.save(producto);
+				}).subscribe(producto -> LOG.info("Insert: " + producto.getId() + " " + producto.getNombre()));
 	}
 
 }
