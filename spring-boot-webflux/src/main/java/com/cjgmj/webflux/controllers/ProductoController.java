@@ -10,8 +10,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.thymeleaf.spring5.context.webflux.ReactiveDataDriverContextVariable;
 
-import com.cjgmj.webflux.models.dao.ProductoDao;
 import com.cjgmj.webflux.models.documents.Producto;
+import com.cjgmj.webflux.models.services.ProductoService;
 
 import reactor.core.publisher.Flux;
 
@@ -21,14 +21,11 @@ public class ProductoController {
 	private static final Logger LOG = LoggerFactory.getLogger(ProductoController.class);
 
 	@Autowired
-	private ProductoDao productoDao;
+	private ProductoService productoService;
 
 	@GetMapping({ "/", "/listar" })
 	public String listar(Model model) {
-		final Flux<Producto> productos = this.productoDao.findAll().map(producto -> {
-			producto.setNombre(producto.getNombre().toUpperCase());
-			return producto;
-		});
+		final Flux<Producto> productos = this.productoService.findAllConNombreUpperCase();
 
 		productos.subscribe(producto -> LOG.info(producto.getNombre()));
 
@@ -40,10 +37,8 @@ public class ProductoController {
 
 	@GetMapping("/listar-datadriver")
 	public String listarDataDriver(Model model) {
-		final Flux<Producto> productos = this.productoDao.findAll().map(producto -> {
-			producto.setNombre(producto.getNombre().toUpperCase());
-			return producto;
-		}).delayElements(Duration.ofSeconds(1));
+		final Flux<Producto> productos = this.productoService.findAllConNombreUpperCase()
+				.delayElements(Duration.ofSeconds(1));
 
 		productos.subscribe(producto -> LOG.info(producto.getNombre()));
 
@@ -55,10 +50,7 @@ public class ProductoController {
 
 	@GetMapping("/listar-full")
 	public String listarFull(Model model) {
-		final Flux<Producto> productos = this.productoDao.findAll().map(producto -> {
-			producto.setNombre(producto.getNombre().toUpperCase());
-			return producto;
-		}).repeat(5000);
+		final Flux<Producto> productos = this.productoService.findAllConNombreUpperCaseRepeat();
 
 		model.addAttribute("productos", new ReactiveDataDriverContextVariable(productos, 1));
 		model.addAttribute("titulo", "Listado de productos");
@@ -68,10 +60,7 @@ public class ProductoController {
 
 	@GetMapping("/listar-chunked")
 	public String listarChunked(Model model) {
-		final Flux<Producto> productos = this.productoDao.findAll().map(producto -> {
-			producto.setNombre(producto.getNombre().toUpperCase());
-			return producto;
-		}).repeat(5000);
+		final Flux<Producto> productos = this.productoService.findAllConNombreUpperCaseRepeat();
 
 		model.addAttribute("productos", new ReactiveDataDriverContextVariable(productos, 1));
 		model.addAttribute("titulo", "Listado de productos");
