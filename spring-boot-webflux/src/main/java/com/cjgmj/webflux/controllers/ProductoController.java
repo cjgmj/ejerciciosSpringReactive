@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
 import org.thymeleaf.spring5.context.webflux.ReactiveDataDriverContextVariable;
 
 import com.cjgmj.webflux.models.documents.Producto;
@@ -17,6 +20,7 @@ import com.cjgmj.webflux.models.services.ProductoService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@SessionAttributes("producto")
 @Controller
 public class ProductoController {
 
@@ -41,12 +45,46 @@ public class ProductoController {
 	public Mono<String> crear(Model model) {
 		model.addAttribute("producto", new Producto());
 		model.addAttribute("titulo", "Formulario de producto");
+		model.addAttribute("boton", "Crear");
 
 		return Mono.just("form");
 	}
 
+	@GetMapping("/form/{id}")
+	public Mono<String> editar(@PathVariable String id, Model model) {
+		final Mono<Producto> productoMono = this.productoService.findById(id)
+				.doOnNext(p -> LOG.info("Producto: " + p.getNombre())).defaultIfEmpty(new Producto());
+
+		model.addAttribute("titulo", "Editar producto");
+		model.addAttribute("producto", productoMono);
+		model.addAttribute("boton", "Editar");
+
+		return Mono.just("form");
+	}
+
+	// Versión más reactiva para editar
+	// De esta forma no funciona el SessionAttributes y se tendría que poner el
+	// campo hidden en el formulario
+	@GetMapping("/form-v2/{id}")
+	public Mono<String> editarV2(@PathVariable String id, Model model) {
+		return this.productoService.findById(id).doOnNext(p -> {
+			LOG.info("Producto: " + p.getNombre());
+			model.addAttribute("titulo", "Editar producto");
+			model.addAttribute("producto", p);
+			model.addAttribute("boton", "Editar");
+		}).defaultIfEmpty(new Producto()).flatMap(p -> {
+			if (p.getId() == null) {
+				return Mono.error(new InterruptedException("No existe el producto"));
+			}
+
+			return Mono.just(p);
+		}).thenReturn("form").onErrorResume(ex -> Mono.just("redirect:/listar?error=no+existe+el+producto"));
+	}
+
 	@PostMapping("/form")
-	public Mono<String> guardar(Producto producto) {
+	public Mono<String> guardar(Producto producto, SessionStatus status) {
+		status.setComplete();
+
 		return this.productoService.save(producto).doOnNext(p -> {
 			LOG.info("Producto guardado" + p.getNombre() + " id: " + p.getId());
 		}).thenReturn("redirect:/listar");
