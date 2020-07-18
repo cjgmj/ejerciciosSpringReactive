@@ -105,6 +105,21 @@ public class ProductoController {
 		}
 	}
 
+	@GetMapping("/eliminar/{id}")
+	public Mono<String> eliminar(@PathVariable String id) {
+		return this.productoService.findById(id).defaultIfEmpty(new Producto()).flatMap(p -> {
+			if (p.getId() == null) {
+				return Mono.error(new InterruptedException("No existe el producto a eliminar!"));
+			}
+
+			return Mono.just(p);
+		}).flatMap(p -> {
+			LOG.info("Eliminando producto con id " + p.getId() + " y nombre " + p.getNombre());
+			return this.productoService.delete(p);
+		}).thenReturn("redirect:/listar?success=producto+eliminado+con+éxito")
+				.onErrorResume(ex -> Mono.just("redirect:/listar?error=no+existe+el+producto+a+eliminar"));
+	}
+
 	@GetMapping("/listar-datadriver")
 	public String listarDataDriver(Model model) {
 		final Flux<Producto> productos = this.productoService.findAllConNombreUpperCase()
