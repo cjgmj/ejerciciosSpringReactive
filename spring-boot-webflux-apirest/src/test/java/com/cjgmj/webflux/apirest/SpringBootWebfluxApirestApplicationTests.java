@@ -96,14 +96,56 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Cabecera de la respuesta que se espera
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
 				// Contenido de la respuesta que se espera
-//				.expectBody()
+				.expectBody()
 				// Comprueba los elementos del json de la respuesta
-//				.jsonPath("$.id").isNotEmpty().jsonPath("$.nombre").isEqualTo("TV Panasonic Pantalla LCD");
-				// Otra forma de comprobar el body
+				.jsonPath("$.id").isNotEmpty().jsonPath("$.nombre").isEqualTo("TV Panasonic Pantalla LCD");
+	}
+
+	@Test
+	public void ver2Test() {
+		final Mono<Producto> producto = this.productoService.findByNombre("TV Panasonic Pantalla LCD");
+
+		this.client
+				// Verbo de la petición
+				.get()
+				// Pasamos la variable con Collections, para pruebas unitarias tiene que ser
+				// síncrono por ello usamos block
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
+				// MediaType que se consumirá
+				.accept(MediaType.APPLICATION_JSON)
+				// Envia el request al endpoint
+				.exchange()
+				// Estado de la respuesta que se espera
+				.expectStatus().isOk()
+				// Cabecera de la respuesta que se espera
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				// Contenido de la respuesta que se espera
 				.expectBody(Producto.class)
-				// Podemos comparar con otro objeto procducto con isEqualTo
-//				.isEqualTo(producto.block());
-//				// O compararlo con Assertions
+				// Compara con otro objeto producto con isEqualTo
+				.isEqualTo(producto.block());
+	}
+
+	@Test
+	public void ver3Test() {
+		final Mono<Producto> producto = this.productoService.findByNombre("TV Panasonic Pantalla LCD");
+
+		this.client
+				// Verbo de la petición
+				.get()
+				// Pasamos la variable con Collections, para pruebas unitarias tiene que ser
+				// síncrono por ello usamos block
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
+				// MediaType que se consumirá
+				.accept(MediaType.APPLICATION_JSON)
+				// Envia el request al endpoint
+				.exchange()
+				// Estado de la respuesta que se espera
+				.expectStatus().isOk()
+				// Cabecera de la respuesta que se espera
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				// Contenido de la respuesta que se espera
+				.expectBody(Producto.class)
+//				// Compara con Assertions
 				.consumeWith(response -> {
 					final Producto p = response.getResponseBody();
 
