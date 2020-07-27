@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 
 import com.cjgmj.webflux.apirest.models.documents.Categoria;
 import com.cjgmj.webflux.apirest.models.documents.Producto;
@@ -84,7 +85,8 @@ class SpringBootWebfluxApirestApplicationTests {
 		this.client
 				// Verbo de la petición
 				.get()
-				// Pasamos la variable con Collections, para pruebas unitarias tiene que ser
+				// URI de la petición, pasamos la variable con Collections, para pruebas
+				// unitarias tiene que ser
 				// síncrono por ello usamos block
 				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
 				// MediaType que se consumirá
@@ -108,7 +110,8 @@ class SpringBootWebfluxApirestApplicationTests {
 		this.client
 				// Verbo de la petición
 				.get()
-				// Pasamos la variable con Collections, para pruebas unitarias tiene que ser
+				// URI de la petición, pasamos la variable con Collections, para pruebas
+				// unitarias tiene que ser
 				// síncrono por ello usamos block
 				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
 				// MediaType que se consumirá
@@ -132,7 +135,8 @@ class SpringBootWebfluxApirestApplicationTests {
 		this.client
 				// Verbo de la petición
 				.get()
-				// Pasamos la variable con Collections, para pruebas unitarias tiene que ser
+				// URI de la petición, pasamos la variable con Collections, para pruebas
+				// unitarias tiene que ser
 				// síncrono por ello usamos block
 				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
 				// MediaType que se consumirá
@@ -219,6 +223,38 @@ class SpringBootWebfluxApirestApplicationTests {
 					Assertions.assertThat(p.getNombre()).isEqualTo("Mesa comedor");
 					Assertions.assertThat(p.getCategoria().getNombre()).isEqualTo("Muebles");
 				});
+	}
+
+	@Test
+	public void editarTest() {
+		final Producto producto = this.productoService.findByNombre("Sony Notebook Z110").block();
+		final Categoria categoria = this.productoService.findCategoriaByNombre("Electrónico").block();
+
+		final Producto productoEditado = new Producto("Asus Notebook", 700.00, categoria);
+
+		this.client
+				// Verbo de la petición
+				.put()
+				// URI de la petición, pasamos la variable con Collections
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				// MediaType del request
+				.contentType(MediaType.APPLICATION_JSON)
+				// MediaType del response
+				.accept(MediaType.APPLICATION_JSON)
+				// Body que se envia como JSON, se puede crear como Mono.just() indicando el
+				// tipo del objeto o con BodyInserters.fromValue()
+				.body(BodyInserters.fromValue(productoEditado))
+				// Envia el request al endpoint
+				.exchange()
+				// Estado de la respuesta que se espera
+				.expectStatus().isOk()
+				// Cabecera de la respuesta que se espera
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				// Contenido de la respuesta que se espera
+				.expectBody()
+				// Comprobación con jsonPath
+				.jsonPath("$.id").isNotEmpty().jsonPath("$.nombre").isEqualTo("Asus Notebook")
+				.jsonPath("$.categoria.nombre").isEqualTo("Electrónico");
 	}
 
 }
