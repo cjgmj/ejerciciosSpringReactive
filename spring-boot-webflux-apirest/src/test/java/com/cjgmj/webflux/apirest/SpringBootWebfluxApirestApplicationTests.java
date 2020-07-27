@@ -1,5 +1,6 @@
 package com.cjgmj.webflux.apirest;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
@@ -10,12 +11,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.cjgmj.webflux.apirest.models.documents.Producto;
+import com.cjgmj.webflux.apirest.models.services.ProductoService;
+
+import reactor.core.publisher.Mono;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringBootWebfluxApirestApplicationTests {
 
 	@Autowired
 	private WebTestClient client;
+
+	@Autowired
+	private ProductoService productoService;
 
 	@Test
 	public void listarTest() {
@@ -64,6 +71,41 @@ class SpringBootWebfluxApirestApplicationTests {
 					});
 
 					Assertions.assertThat(productos.size() > 0).isTrue();
+				});
+	}
+
+	@Test
+	public void verTest() {
+		final Mono<Producto> producto = this.productoService.findByNombre("TV Panasonic Pantalla LCD");
+
+		this.client
+				// Verbo de la petición
+				.get()
+				// Pasamos la variable con Collections, para pruebas unitarias tiene que ser
+				// síncrono por ello usamos block
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
+				// MediaType que se consumirá
+				.accept(MediaType.APPLICATION_JSON)
+				// Envia el request al endpoint
+				.exchange()
+				// Estado de la respuesta que se espera
+				.expectStatus().isOk()
+				// Cabecera de la respuesta que se espera
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				// Contenido de la respuesta que se espera
+//				.expectBody()
+				// Comprueba los elementos del json de la respuesta
+//				.jsonPath("$.id").isNotEmpty().jsonPath("$.nombre").isEqualTo("TV Panasonic Pantalla LCD");
+				// Otra forma de comprobar el body
+				.expectBody(Producto.class)
+				// Podemos comparar con otro objeto procducto con isEqualTo
+//				.isEqualTo(producto.block());
+//				// O compararlo con Assertions
+				.consumeWith(response -> {
+					final Producto p = response.getResponseBody();
+
+					Assertions.assertThat(p.getId()).isNotEmpty();
+					Assertions.assertThat(p.getNombre()).isEqualTo("TV Panasonic Pantalla LCD");
 				});
 	}
 

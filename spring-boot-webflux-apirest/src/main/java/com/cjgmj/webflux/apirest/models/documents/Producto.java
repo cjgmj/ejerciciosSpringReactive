@@ -92,4 +92,42 @@ public class Producto {
 		this.foto = foto;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (this.id == null ? 0 : this.id.hashCode());
+		result = prime * result + (this.nombre == null ? 0 : this.nombre.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (this.getClass() != obj.getClass()) {
+			return false;
+		}
+		final Producto other = (Producto) obj;
+		if (this.id == null) {
+			if (other.id != null) {
+				return false;
+			}
+		} else if (!this.id.equals(other.id)) {
+			return false;
+		}
+		if (this.nombre == null) {
+			if (other.nombre != null) {
+				return false;
+			}
+		} else if (!this.nombre.equals(other.nombre)) {
+			return false;
+		}
+		return true;
+	}
+
 }
