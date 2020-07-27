@@ -29,7 +29,8 @@ public class RouterFunctionConfig {
 						productoHandler::crear)
 				.andRoute(PUT("/api/v2/productos/{id}").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
 						productoHandler::editar)
-				.andRoute(DELETE("/api/v2/productos/{id}"), productoHandler::eliminar);
+				.andRoute(DELETE("/api/v2/productos/{id}"), productoHandler::eliminar)
+				.andRoute(POST("/api/v2/productos/upload/{id}"), productoHandler::upload);
 	}
 
 }

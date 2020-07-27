@@ -2,11 +2,15 @@ package com.cjgmj.webflux.apirest.handler;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
+import java.io.File;
 import java.net.URI;
 import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -18,6 +22,9 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class ProductoHandler {
+
+	@Value("${config.uploads.path}")
+	private String path;
 
 	@Autowired
 	private ProductoService productoService;
@@ -72,5 +79,18 @@ public class ProductoHandler {
 		return productoDb.flatMap(p -> this.productoService.delete(p).then(ServerResponse.noContent().build()))
 				.switchIfEmpty(ServerResponse.notFound().build());
 
+	}
+
+	public Mono<ServerResponse> upload(ServerRequest request) {
+		final String id = request.pathVariable("id");
+
+		return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file")).cast(FilePart.class)
+				.flatMap(file -> this.productoService.findById(id).flatMap(p -> {
+					p.setFoto(UUID.randomUUID().toString() + "-"
+							+ file.filename().replace(" ", "").replace(":", "").replace("\\", ""));
+
+					return file.transferTo(new File(this.path + p.getFoto())).then(this.productoService.save(p));
+				})).flatMap(p -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromValue(p)))
+				.switchIfEmpty(ServerResponse.notFound().build());
 	}
 }
