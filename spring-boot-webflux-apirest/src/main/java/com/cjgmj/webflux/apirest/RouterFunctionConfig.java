@@ -1,5 +1,6 @@
 package com.cjgmj.webflux.apirest;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
@@ -27,7 +28,8 @@ public class RouterFunctionConfig {
 				.andRoute(POST("/api/v2/productos").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
 						productoHandler::crear)
 				.andRoute(PUT("/api/v2/productos/{id}").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
-						productoHandler::editar);
+						productoHandler::editar)
+				.andRoute(DELETE("/api/v2/productos/{id}"), productoHandler::eliminar);
 	}
 
 }
