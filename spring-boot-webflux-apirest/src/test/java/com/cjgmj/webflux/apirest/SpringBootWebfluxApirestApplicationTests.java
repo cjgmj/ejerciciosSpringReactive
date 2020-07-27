@@ -1,13 +1,16 @@
 package com.cjgmj.webflux.apirest;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -15,11 +18,15 @@ import org.springframework.web.reactive.function.BodyInserters;
 import com.cjgmj.webflux.apirest.models.documents.Categoria;
 import com.cjgmj.webflux.apirest.models.documents.Producto;
 import com.cjgmj.webflux.apirest.models.services.ProductoService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import reactor.core.publisher.Mono;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringBootWebfluxApirestApplicationTests {
+
+	@Value("${config.base.endpoint}")
+	private String url;
 
 	@Autowired
 	private WebTestClient client;
@@ -34,7 +41,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.get()
 				// URI de la petición
-				.uri("/api/v2/productos")
+				.uri(this.url)
 				// MediaType que se consumirá
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
@@ -55,7 +62,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.get()
 				// URI de la petición
-				.uri("/api/v2/productos")
+				.uri(this.url)
 				// MediaType que se consumirá
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
@@ -88,7 +95,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// URI de la petición, pasamos la variable con Collections, para pruebas
 				// unitarias tiene que ser
 				// síncrono por ello usamos block
-				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
+				.uri(this.url + "/{id}", Collections.singletonMap("id", producto.block().getId()))
 				// MediaType que se consumirá
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
@@ -113,7 +120,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// URI de la petición, pasamos la variable con Collections, para pruebas
 				// unitarias tiene que ser
 				// síncrono por ello usamos block
-				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
+				.uri(this.url + "/{id}", Collections.singletonMap("id", producto.block().getId()))
 				// MediaType que se consumirá
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
@@ -138,7 +145,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// URI de la petición, pasamos la variable con Collections, para pruebas
 				// unitarias tiene que ser
 				// síncrono por ello usamos block
-				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.block().getId()))
+				.uri(this.url + "/{id}", Collections.singletonMap("id", producto.block().getId()))
 				// MediaType que se consumirá
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
@@ -168,7 +175,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.post()
 				// URI de la petición
-				.uri("/api/v2/productos")
+				.uri(this.url)
 				// MediaType del request
 				.contentType(MediaType.APPLICATION_JSON)
 				// MediaType del response
@@ -185,8 +192,12 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Contenido de la respuesta que se espera
 				.expectBody()
 				// Comprobación con jsonPath
-				.jsonPath("$.id").isNotEmpty().jsonPath("$.nombre").isEqualTo("Mesa comedor")
-				.jsonPath("$.categoria.nombre").isEqualTo("Muebles");
+				// Validar cuando no apunte al controlador
+//				.jsonPath("$.id").isNotEmpty().jsonPath("$.nombre").isEqualTo("Mesa comedor")
+//				.jsonPath("$.categoria.nombre").isEqualTo("Muebles");
+				// Validar cuando apunte al controlador
+				.jsonPath("$.producto.id").isNotEmpty().jsonPath("$.producto.nombre").isEqualTo("Mesa comedor")
+				.jsonPath("$.producto.categoria.nombre").isEqualTo("Muebles");
 	}
 
 	@Test
@@ -199,7 +210,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.post()
 				// URI de la petición
-				.uri("/api/v2/productos")
+				.uri(this.url)
 				// MediaType del request
 				.contentType(MediaType.APPLICATION_JSON)
 				// MediaType del response
@@ -214,10 +225,24 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Cabecera de la respuesta que se espera
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
 				// Contenido de la respuesta que se espera
-				.expectBody(Producto.class)
+				// Validar cuando no apunte al controlador
+//				.expectBody(Producto.class)
+				// Comprobación con Assertions
+//				.consumeWith(response -> {
+//					final Producto p = response.getResponseBody();
+//
+//					Assertions.assertThat(p.getId()).isNotEmpty();
+//					Assertions.assertThat(p.getNombre()).isEqualTo("Mesa comedor");
+//					Assertions.assertThat(p.getCategoria().getNombre()).isEqualTo("Muebles");
+//				});
+				// Validar cuando apunte al controlador
+				.expectBody(new ParameterizedTypeReference<LinkedHashMap<String, Object>>() {
+				})
 				// Comprobación con Assertions
 				.consumeWith(response -> {
-					final Producto p = response.getResponseBody();
+					final Object o = response.getResponseBody().get("producto");
+
+					final Producto p = new ObjectMapper().convertValue(o, Producto.class);
 
 					Assertions.assertThat(p.getId()).isNotEmpty();
 					Assertions.assertThat(p.getNombre()).isEqualTo("Mesa comedor");
@@ -236,7 +261,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.put()
 				// URI de la petición, pasamos la variable con Collections
-				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				.uri(this.url + "/{id}", Collections.singletonMap("id", producto.getId()))
 				// MediaType del request
 				.contentType(MediaType.APPLICATION_JSON)
 				// MediaType del response
@@ -265,7 +290,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.delete()
 				// URI de la petición, pasamos la variable con Collections
-				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				.uri(this.url + "/{id}", Collections.singletonMap("id", producto.getId()))
 				// MediaType del response
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
@@ -279,7 +304,7 @@ class SpringBootWebfluxApirestApplicationTests {
 				// Verbo de la petición
 				.get()
 				// URI de la petición, pasamos la variable con Collections
-				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				.uri(this.url + "/{id}", Collections.singletonMap("id", producto.getId()))
 				// MediaType del response
 				.accept(MediaType.APPLICATION_JSON)
 				// Envia el request al endpoint
