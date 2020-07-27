@@ -13,6 +13,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.FormFieldPart;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
@@ -20,6 +23,7 @@ import com.cjgmj.webflux.apirest.models.documents.Categoria;
 import com.cjgmj.webflux.apirest.models.documents.Producto;
 import com.cjgmj.webflux.apirest.models.services.ProductoService;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -30,6 +34,9 @@ public class ProductoHandler {
 
 	@Autowired
 	private ProductoService productoService;
+
+	@Autowired
+	private Validator validator;
 
 	public Mono<ServerResponse> listar(ServerRequest request) {
 		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(this.productoService.findAll(),
@@ -55,6 +62,30 @@ public class ProductoHandler {
 			return this.productoService.save(p);
 		}).flatMap(p -> ServerResponse.created(URI.create("/api/v2/productos/".concat(p.getId())))
 				.contentType(MediaType.APPLICATION_JSON).body(fromValue(p)));
+	}
+
+	public Mono<ServerResponse> crearValidado(ServerRequest request) {
+		final Mono<Producto> producto = request.bodyToMono(Producto.class);
+
+		return producto.flatMap(p -> {
+			final Errors errors = new BeanPropertyBindingResult(p, Producto.class.getName());
+
+			this.validator.validate(p, errors);
+
+			if (errors.hasErrors()) {
+				return Flux.fromIterable(errors.getFieldErrors())
+						.map(fieldError -> "El campo " + fieldError.getField() + " " + fieldError.getDefaultMessage())
+						.collectList().flatMap(list -> ServerResponse.badRequest().body(fromValue(list)));
+			} else {
+				if (p.getCreateAt() == null) {
+					p.setCreateAt(new Date());
+				}
+
+				return this.productoService.save(p)
+						.flatMap(pdb -> ServerResponse.created(URI.create("/api/v2/productos/".concat(pdb.getId())))
+								.contentType(MediaType.APPLICATION_JSON).body(fromValue(pdb)));
+			}
+		});
 	}
 
 	public Mono<ServerResponse> editar(ServerRequest request) {

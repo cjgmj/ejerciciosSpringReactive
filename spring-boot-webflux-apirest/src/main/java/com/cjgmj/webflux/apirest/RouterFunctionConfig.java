@@ -26,7 +26,7 @@ public class RouterFunctionConfig {
 				.andRoute(GET("/api/v2/productos/{id}"), productoHandler::ver)
 				// Se puede especificar el contentType añadiendo and a la petición
 				.andRoute(POST("/api/v2/productos").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
-						productoHandler::crear)
+						productoHandler::crearValidado)
 				.andRoute(PUT("/api/v2/productos/{id}").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
 						productoHandler::editar)
 				.andRoute(DELETE("/api/v2/productos/{id}"), productoHandler::eliminar)
