@@ -257,4 +257,37 @@ class SpringBootWebfluxApirestApplicationTests {
 				.jsonPath("$.categoria.nombre").isEqualTo("Electrónico");
 	}
 
+	@Test
+	public void eliminarTest() {
+		final Producto producto = this.productoService.findByNombre("Mica Cómoda 5 Cajones").block();
+
+		this.client
+				// Verbo de la petición
+				.delete()
+				// URI de la petición, pasamos la variable con Collections
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				// MediaType del response
+				.accept(MediaType.APPLICATION_JSON)
+				// Envia el request al endpoint
+				.exchange()
+				// Estado de la respuesta que se espera
+				.expectStatus().isNoContent()
+				// Contenido de la respuesta que se espera
+				.expectBody().isEmpty();
+
+		this.client
+				// Verbo de la petición
+				.get()
+				// URI de la petición, pasamos la variable con Collections
+				.uri("/api/v2/productos/{id}", Collections.singletonMap("id", producto.getId()))
+				// MediaType del response
+				.accept(MediaType.APPLICATION_JSON)
+				// Envia el request al endpoint
+				.exchange()
+				// Estado de la respuesta que se espera
+				.expectStatus().isNotFound()
+				// Contenido de la respuesta que se espera
+				.expectBody().isEmpty();
+	}
+
 }
