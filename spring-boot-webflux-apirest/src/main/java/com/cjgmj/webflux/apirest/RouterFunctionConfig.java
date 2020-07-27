@@ -5,6 +5,8 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
@@ -17,7 +19,10 @@ public class RouterFunctionConfig {
 	public RouterFunction<ServerResponse> routes(ProductoHandler productoHandler) {
 //		return route(GET("/api/v2/productos").or(GET("/api/v2/productos/lista")), request -> ServerResponse.ok()
 //				.contentType(MediaType.APPLICATION_JSON).body(this.productoService.findAll(), Producto.class));
-		return route(GET("/api/v2/productos").or(GET("/api/v2/productos/lista")), productoHandler::listar);
+		return route(GET("/api/v2/productos").or(GET("/api/v2/productos/lista")), productoHandler::listar).andRoute(
+				// Se puede especificar el contentType añadiendo and a la petición
+				GET("/api/v2/productos/{id}").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
+				productoHandler::ver);
 	}
 
 }
