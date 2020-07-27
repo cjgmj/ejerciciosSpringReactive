@@ -69,6 +69,11 @@ public class ProductoServiceImpl implements ProductoService {
 	}
 
 	@Override
+	public Mono<Categoria> findCategoriaByNombre(String nombre) {
+		return this.categoriaDao.findByNombre(nombre);
+	}
+
+	@Override
 	public Mono<Categoria> saveCategoria(Categoria categoria) {
 		return this.categoriaDao.save(categoria);
 	}
