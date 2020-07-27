@@ -1,6 +1,7 @@
 package com.cjgmj.webflux.apirest;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import org.springframework.context.annotation.Bean;
@@ -19,10 +20,11 @@ public class RouterFunctionConfig {
 	public RouterFunction<ServerResponse> routes(ProductoHandler productoHandler) {
 //		return route(GET("/api/v2/productos").or(GET("/api/v2/productos/lista")), request -> ServerResponse.ok()
 //				.contentType(MediaType.APPLICATION_JSON).body(this.productoService.findAll(), Producto.class));
-		return route(GET("/api/v2/productos").or(GET("/api/v2/productos/lista")), productoHandler::listar).andRoute(
+		return route(GET("/api/v2/productos").or(GET("/api/v2/productos/lista")), productoHandler::listar)
+				.andRoute(GET("/api/v2/productos/{id}"), productoHandler::ver)
 				// Se puede especificar el contentType añadiendo and a la petición
-				GET("/api/v2/productos/{id}").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
-				productoHandler::ver);
+				.andRoute(POST("/api/v2/productos").and(RequestPredicates.contentType(MediaType.APPLICATION_JSON)),
+						productoHandler::crear);
 	}
 
 }

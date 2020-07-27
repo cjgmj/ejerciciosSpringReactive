@@ -2,6 +2,9 @@ package com.cjgmj.webflux.apirest.handler;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
+import java.net.URI;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -30,5 +33,18 @@ public class ProductoHandler {
 		return this.productoService.findById(id)
 				.flatMap(p -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromValue(p)))
 				.switchIfEmpty(ServerResponse.notFound().build());
+	}
+
+	public Mono<ServerResponse> crear(ServerRequest request) {
+		final Mono<Producto> producto = request.bodyToMono(Producto.class);
+
+		return producto.flatMap(p -> {
+			if (p.getCreateAt() == null) {
+				p.setCreateAt(new Date());
+			}
+
+			return this.productoService.save(p);
+		}).flatMap(p -> ServerResponse.created(URI.create("/api/v2/productos/".concat(p.getId())))
+				.contentType(MediaType.APPLICATION_JSON).body(fromValue(p)));
 	}
 }
