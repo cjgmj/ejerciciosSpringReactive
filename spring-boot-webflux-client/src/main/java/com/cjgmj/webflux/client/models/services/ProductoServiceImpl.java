@@ -22,12 +22,13 @@ import reactor.core.publisher.Mono;
 @Service
 public class ProductoServiceImpl implements ProductoService {
 
+	// Con eureka se añade .Builder y en cada client se añade .build()
 	@Autowired
-	private WebClient client;
+	private WebClient.Builder client;
 
 	@Override
 	public Flux<Producto> findAll() {
-		return this.client.get().accept(APPLICATION_JSON).exchange()
+		return this.client.build().get().accept(APPLICATION_JSON).exchange()
 				.flatMapMany(response -> response.bodyToFlux(Producto.class));
 	}
 
@@ -36,7 +37,7 @@ public class ProductoServiceImpl implements ProductoService {
 		final Map<String, Object> params = new HashMap<>();
 		params.put("id", id);
 
-		return this.client.get().uri("/{id}", params).accept(APPLICATION_JSON)
+		return this.client.build().get().uri("/{id}", params).accept(APPLICATION_JSON)
 //				.exchange()
 //				.flatMap(response -> response.bodyToMono(Producto.class));
 				// Otra forma de obtener el body, también aplicable cuando es un Flux con
@@ -46,7 +47,7 @@ public class ProductoServiceImpl implements ProductoService {
 
 	@Override
 	public Mono<Producto> save(Producto producto) {
-		return this.client.post().accept(APPLICATION_JSON).contentType(APPLICATION_JSON)
+		return this.client.build().post().accept(APPLICATION_JSON).contentType(APPLICATION_JSON)
 //				.body(fromValue(producto))
 				// Otra forma de pasar el body
 				.bodyValue(producto).retrieve().bodyToMono(Producto.class);
@@ -54,13 +55,14 @@ public class ProductoServiceImpl implements ProductoService {
 
 	@Override
 	public Mono<Producto> update(Producto producto, String id) {
-		return this.client.put().uri("/{id}", Collections.singletonMap("id", id)).accept(APPLICATION_JSON)
+		return this.client.build().put().uri("/{id}", Collections.singletonMap("id", id)).accept(APPLICATION_JSON)
 				.contentType(APPLICATION_JSON).bodyValue(producto).retrieve().bodyToMono(Producto.class);
 	}
 
 	@Override
 	public Mono<Void> delete(String id) {
-		return this.client.delete().uri("/{id}", Collections.singletonMap("id", id)).retrieve().bodyToMono(Void.class);
+		return this.client.build().delete().uri("/{id}", Collections.singletonMap("id", id)).retrieve()
+				.bodyToMono(Void.class);
 	}
 
 	@Override
@@ -70,7 +72,7 @@ public class ProductoServiceImpl implements ProductoService {
 			h.setContentDispositionFormData("file", file.filename());
 		});
 
-		return this.client.post().uri("/upload/{id}", Collections.singletonMap("id", id))
+		return this.client.build().post().uri("/upload/{id}", Collections.singletonMap("id", id))
 				.contentType(MULTIPART_FORM_DATA).bodyValue(parts.build()).retrieve().bodyToMono(Producto.class);
 	}
 
