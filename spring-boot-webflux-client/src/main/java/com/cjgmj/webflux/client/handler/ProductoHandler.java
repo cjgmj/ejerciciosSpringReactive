@@ -7,6 +7,7 @@ import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -69,6 +70,14 @@ public class ProductoHandler {
 		final String id = request.pathVariable("id");
 
 		return this.productoService.delete(id).then(ServerResponse.noContent().build());
+	}
+
+	public Mono<ServerResponse> upload(ServerRequest request) {
+		final String id = request.pathVariable("id");
+
+		return request.multipartData().map(multipart -> multipart.toSingleValueMap().get("file")).cast(FilePart.class)
+				.flatMap(file -> this.productoService.upload(file, id))
+				.flatMap(p -> ServerResponse.ok().contentType(APPLICATION_JSON).bodyValue(p));
 	}
 
 }
